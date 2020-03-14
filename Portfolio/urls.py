@@ -4,7 +4,7 @@ from Portfolio.views import ProfileViewSet
 
 router = routers.SimpleRouter()
 
-router.register(r'create_profile', ProfileViewSet)
+router.register(r'profile', ProfileViewSet)
 
 urlpatterns = [
     url('', include(router.urls)),

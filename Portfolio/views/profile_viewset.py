@@ -7,6 +7,7 @@ from Portfolio.serialziers import ProfileSeraizler
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
+    serializer_class = ProfileSeraizler
 
     def create(self, request, *args, **kwargs):
         profile_data = self.request.data
@@ -14,3 +15,4 @@ class ProfileViewSet(viewsets.ModelViewSet):
         profile_serializer.is_valid(raise_exception=True)
         profile_serializer.save()
         return Response(status=status.HTTP_200_OK)
+
