@@ -6,6 +6,7 @@ from django.urls import reverse
 from Portfolio.models import Profile
 import json
 
+
 class ProfileTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -46,3 +47,9 @@ class ProfileTest(TestCase):
         response = self.client.put(self.profile_detail_url, data=data, content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Profile.objects.get(name="Youmna Ali").email, "youmnaali11@gmail.com")
+
+    def test_retrieve_profile(self):
+        response = self.client.get(self.profile_detail_url)
+        response_returned_content = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_returned_content['name'], "Youmna Ali")

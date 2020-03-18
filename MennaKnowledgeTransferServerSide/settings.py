@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
     'django_extensions',# <-- Here
-    'Portfolio.apps.PortfolioConfig'
+    'Portfolio.apps.PortfolioConfig',
+    'MasterData.apps.MasterdataConfig'
 ]
 
 MIDDLEWARE = [

@@ -26,6 +26,7 @@ from django.contrib.auth import views as auth
 urlpatterns = [
     url(r'^api/', include([
         url(r'^auth/', include('rest_auth.urls')),
-        url(r'profile/', include('Portfolio.urls'))
+        url(r'profile/', include('Portfolio.urls')),
+        url(r'', include('MasterData.urls'))
     ]))
 ]
