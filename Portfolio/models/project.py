@@ -9,3 +9,4 @@ class Project(models.Model):
     categories = models.ManyToManyField(Category)
     url = models.CharField(max_length=225)
     github_url = models.CharField(max_length=225)
+    created_date = models.DateField(auto_now_add=True)

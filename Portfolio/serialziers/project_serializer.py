@@ -4,7 +4,7 @@ from MasterData.models import ImplementationTool, Category
 from MasterData.serializers import ImplementationToolSerializer, CategorySerializer
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSaveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = [

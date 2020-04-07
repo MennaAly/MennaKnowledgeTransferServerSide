@@ -8,6 +8,7 @@ from Portfolio.serialziers import ProfileSeraizler
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = Profile.objects.all()
     serializer_class = ProfileSeraizler
+    filter_backends = []
 
     def create(self, request, *args, **kwargs):
         profile_data = self.request.data
