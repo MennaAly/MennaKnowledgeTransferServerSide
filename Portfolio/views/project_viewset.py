@@ -5,6 +5,9 @@ from rest_framework.response import Response
 from MasterData.models import ImplementationTool, Category
 from Portfolio.models import Project
 from Portfolio.serialziers import ProjectSaveSerializer
+from rest_framework import filters
+
+from Portfolio.serialziers.project_serializer import ProjectRetrieveSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -13,16 +16,33 @@ class ProjectViewSet(viewsets.ModelViewSet):
     category_instances = None
     request_data = None
     queryset = Project.objects.all()
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['created_date']
 
     def get_queryset(self):
+        print('the action ',self.request.query_params.get('action'))
         if self.request.query_params.get('action') == 'save':
             return Project.objects.all().only('name', 'description', 'url', 'github_url', 'created_date')
+        elif self.request.query_params.get('action') == 'retrieve_by_date':
+            return Project.objects.prefetch_related('implementation_tools', 'categories').only('name', 'description',
+                                                                                               'url', 'github_url',
+                                                                                               'created_date',
+                                                                                               'implementation_tools__name',
+                                                                                               'implementation_tools__id',
+                                                                                               'categories__name',
+                                                                                               'categories__id')
         else:
             return Project.objects.all()
 
     def get_serializer_class(self):
+        print('the action ',self.request.query_params.get('action'))
         if self.request.query_params.get('action') == 'save':
             return ProjectSaveSerializer
+        elif self.request.query_params.get('action') == 'retrieve_by_date':
+            return ProjectRetrieveSerializer
+        else:
+            return ProjectSaveSerializer
+
 
     def get_request_data(self):
         self.request_data = self.request.data
@@ -41,7 +61,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project_serializer = self.serialize_project_using_save_serializer()
         self.validate_serializer(project_serializer)
         self.created_project = self.save_project_through_serializer_layer(project_serializer)
-
 
     def get_implentation_tool_ids_from_request(self):
         implementation_tool_ids = self.request_data['implementation_tool_ids']
@@ -68,7 +87,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         categories_ids = self.request_data['category_ids']
         return categories_ids
 
-    def get_category_instances(self,categories_ids):
+    def get_category_instances(self, categories_ids):
         return Category.objects.filter(id__in=categories_ids)
 
     def add_categories_to_project(self):
@@ -82,6 +101,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        print('in create')
+        print('the action ',self.request.query_params.get('action'))
         self.get_request_data()
         self.create_project_instance()
         self.associate_project_with_its_implementation_tools()
