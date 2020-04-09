@@ -1,6 +1,6 @@
 from django.db import models
 from MasterData.models import Category, ImplementationTool
-
+import datetime
 
 class Project(models.Model):
     name = models.CharField(max_length=225)
@@ -9,4 +9,4 @@ class Project(models.Model):
     categories = models.ManyToManyField(Category)
     url = models.CharField(max_length=225)
     github_url = models.CharField(max_length=225)
-    created_date = models.DateField(auto_now_add=True)
+    created_date = models.DateField(default=datetime.date.today())
