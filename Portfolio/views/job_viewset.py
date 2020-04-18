@@ -7,7 +7,7 @@ from Portfolio.serialziers.job_serializer import JobSaveSerializer
 
 
 class JobViewSet(viewsets.ModelViewSet):
-    queryset = Job
+    queryset = Job.objects.all()
     request_data = None
     job_serializer = None
     job_instance = None
