@@ -13,7 +13,7 @@ class JobViewSet(viewsets.ModelViewSet):
     job_instance = None
     project_ids = None
     project_instances = None
-    responsibility_dict_from_request = None
+    responsibility_dict_from_request = []
     responsibility_serializer = None
     responsibility_instances = None
 
@@ -59,13 +59,13 @@ class JobViewSet(viewsets.ModelViewSet):
         self.job_instance.projects.add(*self.project_instances)
 
     def save_job_instance(self):
-        return self.job_instance.save()
+        self.job_instance.save()
 
     def associate_projects_to_job(self):
         self.project_ids = self.get_project_ids_from_request()
         self.project_instances = self.get_project_instances()
         self.add_project_instances_to_job_instance()
-        self.job_instance = self.save_job_instance()
+        self.save_job_instance()
 
     def get_responsibility_from_request(self):
         return self.request_data['responsibility']
@@ -84,7 +84,7 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def associate_responsibilities_to_job(self):
         self.add_responsibility_instances_to_job_instance()
-        self.job_instance = self.save_job_instance()
+        self.save_job_instance()
 
     def create(self, request, *args, **kwargs):
         self.get_request_data()
@@ -92,3 +92,4 @@ class JobViewSet(viewsets.ModelViewSet):
         self.associate_projects_to_job()
         self.create_responsibility_instances()
         self.associate_responsibilities_to_job()
+        return Response(status=status.HTTP_200_OK)

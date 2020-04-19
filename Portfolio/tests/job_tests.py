@@ -33,22 +33,26 @@ class JobTest(TestCase):
     def test_create_job(self):
         request_data = {
             "company_name": "smart",
-            "date_from": datetime.datetime(2015, 6, 1),
-            "date_to": datetime.datetime(2015, 6, 1),
+            "date_from": '2006-10-25',
+            "date_to": '2007-10-25',
             "position_name": "software engineer",
             "project_ids": [self.projects[0].id, self.projects[1].id, self.projects[2].id],
             "responsibility": [{
-                "name": "res1"
+                'name': 'res1'
             }, {
-                "name": "res2"
+                'name': 'res2'
             }, {
-                "name": "res3"
+                'name': 'res3'
             }, {
-                "name": "res4"
-            }, ]
+                'name': 'res4'
+            }]
         }
         url = self.reverse_url("job-list", {})
         url += '?action=save'
-        response = self.client.post(url, request_data)
+        response = self.client.post(url, json.dumps(request_data),
+                                    content_type="application/json")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Job.objects.count(), 1)
+        created_job_instance = Job.objects.last()
+        self.assertEqual(created_job_instance.projects.count(), 3)
+        self.assertEqual(created_job_instance.responsibilities.count(), 4)
