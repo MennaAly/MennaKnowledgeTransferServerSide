@@ -93,3 +93,29 @@ class JobViewSet(viewsets.ModelViewSet):
         self.create_responsibility_instances()
         self.associate_responsibilities_to_job()
         return Response(status=status.HTTP_200_OK)
+
+    def get_job_instance(self):
+        self.job_instance = Job.objects.filter(id=self.request_data['id']).first()
+        print('the job instance', self.job_instance)
+
+    def update_job_end_date(self):
+        if self.request_data.get('date_to', None) is not None:
+            self.job_instance.date_to = self.request_data['date_to']
+            self.save_job_instance()
+
+    def update_job_projects(self):
+        if self.request_data.get('project_ids', None) is not None:
+            self.associate_projects_to_job()
+
+    def update_job_responsibilities(self):
+        if self.request_data.get('responsibility', None) is not None:
+            self.create_responsibility_instances()
+            self.associate_responsibilities_to_job()
+
+    def update(self, request, *args, **kwargs):
+        self.get_request_data()
+        self.get_job_instance()
+        self.update_job_end_date()
+        self.update_job_projects()
+        self.update_job_responsibilities()
+        return Response(status=status.HTTP_200_OK)
