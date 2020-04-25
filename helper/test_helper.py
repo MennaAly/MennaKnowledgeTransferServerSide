@@ -31,3 +31,7 @@ def create_dummy_instances(model_name, quantity, many_to_many_flag):
 
 def create_dummy_instance(model_name, many_to_many_flag):
     return mommy.make(model_name, make_m2m=many_to_many_flag)
+
+
+# def validate_status_code(response, status_code_number):
+#     return response.status_code == status_code_number

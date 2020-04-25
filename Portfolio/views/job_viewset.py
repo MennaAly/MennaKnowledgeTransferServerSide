@@ -96,7 +96,6 @@ class JobViewSet(viewsets.ModelViewSet):
 
     def get_job_instance(self):
         self.job_instance = Job.objects.filter(id=self.request_data['id']).first()
-        print('the job instance', self.job_instance)
 
     def update_job_end_date(self):
         if self.request_data.get('date_to', None) is not None:
