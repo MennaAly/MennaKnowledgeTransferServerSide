@@ -1,7 +1,11 @@
 from datetime import datetime, date
 from django.test import TestCase
+from model_mommy import mommy
+
 from MasterData.models import Responsibility
+from MasterData.serializers import ResponsibilitySerializer
 from Portfolio.models import Project, Job
+from Portfolio.serialziers.job_serializer import JobRetrieveSerializer
 from helper import reverse_url, authorization_setup, create_request_body, create_dummy_instances, create_dummy_instance
 import json
 
@@ -196,3 +200,61 @@ class UpdateJobTest(TestCase):
         self.validate_update_job_end_date(date(2011, 10, 25))
         self.validate_updated_job_projects_count(job_projects_count, new_projects_quantity)
         self.validate_updated_job_responsibilities_count(job_responsibilities_count, new_responsibilities_count)
+
+
+class RetrieveJobTest(TestCase):
+    def retrieve_job_setup(self):
+        self.retrieved_job = create_dummy_instance(Job, True)
+        self.responsibilities = create_dummy_instances(Responsibility, 2, False)
+        self.projects = create_dummy_instances(Project, 3, False)
+        self.retrieved_job.projects.add(*self.projects)
+        self.retrieved_job.responsibilities.add(*self.responsibilities)
+        self.retrieved_job.save()
+        self.retrieve_job_url = reverse_url("job-detail", {'pk': self.retrieved_job.id})
+        self.retrieve_job_url += '?action=retrieve'
+
+    def setUp(self):
+        self.client = authorization_setup()
+        self.retrieve_job_setup()
+
+    def send_data_to_update_job_api(self):
+        return self.client.get(self.retrieve_job_url, content_type="application/json")
+
+    def get_serialized_job(self):
+        return JobRetrieveSerializer(self.retrieved_job).data
+
+    def test_retrieve_job(self):
+        response = self.send_data_to_update_job_api()
+        response_returned_content = json.loads(response.content)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_returned_content, self.get_serialized_job())
+
+
+class RetrieveJobsByBeginDateTest(TestCase):
+    def retrieve_jobs_setup(self):
+        self.job_begin_in_2019 = mommy.make(Job, date_from=datetime(2019, 6, 1))
+        self.job_begin_in_2020 = mommy.make(Job, date_from=datetime(2020, 6, 1))
+        self.job_begin_in_2021 = mommy.make(Job, date_from=datetime(2021, 6, 1))
+        self.job_begin_in_2022 = mommy.make(Job, date_from=datetime(2022, 6, 1))
+        self.ordered_jobs_by_begin_date = Job.objects.order_by('-date_from')
+        self.serialized_ordered_jobs_by_begin_date = JobRetrieveSerializer(self.ordered_jobs_by_begin_date,
+                                                                           many=True).data
+        self.retrieve_jobs_url = reverse_url("job-list", {})
+        self.retrieve_jobs_url += '?action=retrieve&ordering=-date_from'
+
+    def send_data_to_update_job_api(self):
+        return self.client.get(self.retrieve_jobs_url, content_type="application/json")
+
+    def setUp(self):
+        self.client = authorization_setup()
+        self.retrieve_jobs_setup()
+
+    def test_retrieve_jobs_by_begin_date(self):
+        response = self.send_data_to_update_job_api()
+        response_returned_content = json.loads(response.content)
+        for x in response_returned_content:
+            print('date', x['company_name'], ' ', x['date_from'])
+        for val in self.serialized_ordered_jobs_by_begin_date:
+            print('val', val['company_name'], ' ', val['date_from'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response_returned_content, self.serialized_ordered_jobs_by_begin_date)

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 
 from MasterData.serializers import ResponsibilitySerializer
 from Portfolio.models import Job, Project
-from Portfolio.serialziers.job_serializer import JobSaveSerializer
+from Portfolio.serialziers.job_serializer import JobSaveSerializer, JobRetrieveSerializer
 
 
 class JobViewSet(viewsets.ModelViewSet):
@@ -16,6 +16,8 @@ class JobViewSet(viewsets.ModelViewSet):
     responsibility_dict_from_request = []
     responsibility_serializer = None
     responsibility_instances = None
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['date_from']
 
     def get_queryset(self):
         action = self.request.query_params.get('action')
@@ -24,6 +26,12 @@ class JobViewSet(viewsets.ModelViewSet):
                                     'date_from',
                                     'date_to',
                                     'position_name')
+        elif action == 'retrieve':
+            return Job.objects.prefetch_related('responsibilities').only('company_name',
+                                                                         'date_from',
+                                                                         'date_to',
+                                                                         'position_name',
+                                                                         'responsibilities')
         else:
             return Job.objects.all()
 
@@ -31,6 +39,8 @@ class JobViewSet(viewsets.ModelViewSet):
         action = self.request.query_params.get('action')
         if action == 'save':
             return JobSaveSerializer
+        elif action == 'retrieve':
+            return JobRetrieveSerializer
 
     def get_request_data(self):
         self.request_data = self.request.data
