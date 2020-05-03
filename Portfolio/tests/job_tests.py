@@ -1,5 +1,5 @@
 from datetime import datetime, date
-from django.test import TestCase
+from django.test import TestCase, Client
 from model_mommy import mommy
 
 from MasterData.models import Responsibility
@@ -214,7 +214,9 @@ class RetrieveJobTest(TestCase):
         self.retrieve_job_url += '?action=retrieve'
 
     def setUp(self):
-        self.client = authorization_setup()
+        # no authorization
+        # self.client = authorization_setup()
+        self.client = Client()
         self.retrieve_job_setup()
 
     def send_data_to_update_job_api(self):
@@ -246,15 +248,13 @@ class RetrieveJobsByBeginDateTest(TestCase):
         return self.client.get(self.retrieve_jobs_url, content_type="application/json")
 
     def setUp(self):
-        self.client = authorization_setup()
+        # no authorization
+        # self.client = authorization_setup()
+        self.client = Client()
         self.retrieve_jobs_setup()
 
     def test_retrieve_jobs_by_begin_date(self):
         response = self.send_data_to_update_job_api()
         response_returned_content = json.loads(response.content)
-        for x in response_returned_content:
-            print('date', x['company_name'], ' ', x['date_from'])
-        for val in self.serialized_ordered_jobs_by_begin_date:
-            print('val', val['company_name'], ' ', val['date_from'])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response_returned_content, self.serialized_ordered_jobs_by_begin_date)

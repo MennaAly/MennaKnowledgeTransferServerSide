@@ -36,7 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
-    'django_extensions',# <-- Here
+    'django_extensions',  # <-- Here
     'Portfolio.apps.PortfolioConfig',
     'MasterData.apps.MasterdataConfig'
 ]
@@ -125,6 +125,9 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',  # <-- And here
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'MennaKnowledgeTransferServerSide.permissions.IsGetOrIsAuthenticated',
     ],
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
