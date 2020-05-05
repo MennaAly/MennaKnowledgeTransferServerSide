@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_extensions',  # <-- Here
     'Portfolio.apps.PortfolioConfig',
-    'MasterData.apps.MasterdataConfig'
+    'MasterData.apps.MasterdataConfig',
+    'Blog.apps.BlogConfig',
 ]
 
 MIDDLEWARE = [
