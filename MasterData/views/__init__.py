@@ -1,2 +1,3 @@
 from .category_viewset import CategoryViewSet
 from .implementationtool_viewset import ImplementationToolViewSet
+from .tag_viewset import TagViewSet
