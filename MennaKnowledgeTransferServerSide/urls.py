@@ -25,6 +25,7 @@ urlpatterns = [
     url(r'^api/', include([
         url(r'^auth/', include('rest_auth.urls')),
         url(r'^portfolio/', include('Portfolio.urls')),
+        url(r'^Blog/', include('Blog.urls')),
         url(r'', include('MasterData.urls'))
     ]))
 ]
