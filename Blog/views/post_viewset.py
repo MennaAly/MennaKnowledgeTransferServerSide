@@ -15,7 +15,7 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         action = self.request.query_params.get('action')
         if action == 'save':
-            return Post.objects.only('title', 'content')
+            return Post.objects.only('title', 'markdown_content')
 
     def get_serializer_class(self):
         action = self.request.query_params.get('action')
@@ -29,7 +29,7 @@ class PostViewSet(viewsets.ModelViewSet):
         return PostSaveSerializer(data=self.request_data)
 
     def validate_serializer(self, serializer):
-        serializer.is_valid(raise_expection=True)
+        serializer.is_valid(raise_exception=True)
 
     def save_serializer(self, serializer):
         return serializer.save()

@@ -1,3 +1,4 @@
+import markdown2
 from django.db import models
 from MasterData.models import Tag
 
@@ -10,3 +11,10 @@ class Post(models.Model):
     created_date = models.DateField(default=datetime.date.today())
     tags = models.ManyToManyField(Tag)
     parsed_html_content = models.TextField()
+
+    def convert_content_from_markdown_to_html(self, markdown_content):
+        return markdown2.markdown(markdown_content)
+
+    def save(self, *args, **kwargs):
+        self.parsed_html_content = self.convert_content_from_markdown_to_html(self.markdwon_content)
+        super(Post, self).save(*args, **kwargs)
