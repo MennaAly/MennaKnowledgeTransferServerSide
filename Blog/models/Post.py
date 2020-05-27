@@ -6,6 +6,7 @@ import datetime
 
 class Post(models.Model):
     title = models.CharField(max_length=225)
-    content = models.TextField()
+    markdwon_content = models.TextField()
     created_date = models.DateField(default=datetime.date.today())
     tags = models.ManyToManyField(Tag)
+    parsed_html_content = models.TextField()
