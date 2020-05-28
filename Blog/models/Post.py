@@ -7,7 +7,7 @@ import datetime
 
 class Post(models.Model):
     title = models.CharField(max_length=225)
-    markdwon_content = models.TextField()
+    markdown_content = models.TextField()
     created_date = models.DateField(default=datetime.date.today())
     tags = models.ManyToManyField(Tag)
     parsed_html_content = models.TextField()
@@ -16,5 +16,5 @@ class Post(models.Model):
         return markdown2.markdown(markdown_content)
 
     def save(self, *args, **kwargs):
-        self.parsed_html_content = self.convert_content_from_markdown_to_html(self.markdwon_content)
+        self.parsed_html_content = self.convert_content_from_markdown_to_html(self.markdown_content)
         super(Post, self).save(*args, **kwargs)

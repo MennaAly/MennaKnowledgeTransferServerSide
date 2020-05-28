@@ -31,20 +31,22 @@ class CreatePostTest(TestCase):
     response = None
     post_request_body = None
     number_of_dummy_tags = 4
+    markdown_content = None
 
     def create_dummy_tags(self):
         self.tags = create_dummy_instances(Tag, self.number_of_dummy_tags, False)
         self.tag_ids = [tag.id for tag in self.tags]
 
+    def read_markdown_content_from_file(self):
+        THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+        post_content_markdown_file = open(os.path.join(THIS_FOLDER, 'post_content_markdown.txt'), 'r')
+        self.markdown_content = post_content_markdown_file.read()
+
     def create_post_request_body(self):
         self.post_request_body = create_request_body({
             'title': 'how to effectively study clean code book',
-            'markdown_content': '# 5 Effective Ways to Combat Impostor Syndrome' +
-                       '>Have you ever caught yourself in moments of overwhelming self-doubt, feelingincompetent? Do you find yourself attributing your stellar track record to mere chance as opposed to merit, not internalizing your achievements? Do you often dread being ‘found out’ for the fraud you think you are? If you’re perceived by people as a high achiever, yet you see yourself as anything except that, there’s a high chance you may be struggling with impostor syndrome.' +
-                       '>Over the years I have struggled with my own share of impostor syndrome. I remember how relieved I was when I found out that the seemingly irrational inner conflict I had has a name! I was even more surprised to learn that many of my acquaintances, people who I consider to be absolute geniuses at their pinnacle of success, are also often blinded by how impressive their skill-set is. For that reason I’d chosen to write about how I navigated my way around impostor syndrome, highlighting what has been working best for me.' +
-                       '>**1. Embrace the positive feedback**' +
-                       '>We preach not caring what other people think of us, but it’s not always a bad thing when you take in the positive feedback, especially when you know it’s genuine. I used to consider any praise as an added burden of elevated expectations, but by time I realized that people don’t commend you on your potential, rather on what you have showcased. So next time a coworker praises your work, know that you in fact have done a good job.' +
-                       '![alternativetext](https://placebear.com/300/300)'
+            'markdown_content': self.markdown_content,
+            'tag_ids': self.tag_ids
         })
 
     def setup_url(self):
@@ -53,6 +55,7 @@ class CreatePostTest(TestCase):
 
     def initialize_creation_process_setup(self):
         self.create_dummy_tags()
+        self.read_markdown_content_from_file()
         self.create_post_request_body()
         self.setup_url()
 
@@ -69,27 +72,24 @@ class CreatePostTest(TestCase):
         self.assertEqual(self.response.status_code, 200)
 
     def get_created_post(self):
-        return Post.objects.latest('id')
+        return Post.objects.last()
 
     def get_created_post_parsed_html_attribute(self):
         created_post = self.get_created_post()
         return created_post.parsed_html_content
 
     def convert_markdown_content_to_html(self):
-        THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-        post_content_markdown_file = open(os.path.join(THIS_FOLDER, 'post_content_markdown.txt'), 'r')
-        post_content_markdown = post_content_markdown_file.read()
-        return markdown2.markdown(post_content_markdown)
+        return markdown2.markdown(self.markdown_content)
 
     def test_create_post_has_right_parsed_html(self):
         parsed_html_content = self.get_created_post_parsed_html_attribute()
         converted_html = self.convert_markdown_content_to_html()
         self.assertEqual(parsed_html_content, converted_html)
 
-    def get_created_post_tags(self):
+    def get_created_post_tags_count(self):
         created_post = self.get_created_post()
-        return created_post.tags
+        return created_post.tags.count()
 
     def test_create_post_has_right_number_of_tags(self):
-        tags = self.get_created_post_tags()
-        self.assertEqual(len(tags), self.number_of_dummy_tags)
+        tags_count = self.get_created_post_tags_count()
+        self.assertEqual(tags_count, self.number_of_dummy_tags)

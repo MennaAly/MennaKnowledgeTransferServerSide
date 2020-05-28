@@ -7,7 +7,7 @@ from markdownify import markdownify as md
 
 
 class PostSaveSerializer(serializers.ModelSerializer):
-    markdown_content = serializers.CharField()
+    # markdown_content = serializers.CharField()
 
     class Meta:
         model = Post
