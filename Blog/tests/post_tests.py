@@ -2,25 +2,10 @@ from django.test import TestCase
 
 from Blog.models import Post
 from MasterData.models import Tag
-from helper import authorization_setup, create_dummy_instances, reverse_url, create_request_body, get_response_content
-import codecs
+from helper import authorization_setup, create_dummy_instances, reverse_url, create_request_body, get_response_content, \
+    create_dummy_instance
 import os
-from markdownify import markdownify as md
 import markdown2
-
-
-class ConvertHtmlToMarkDownThirdLibraryTest(TestCase):
-    def setUp(self):
-        THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
-        post_content_html_file = codecs.open(os.path.join(THIS_FOLDER, 'post_content_test.html'))
-        post_content_markdown_file = open(os.path.join(THIS_FOLDER, 'post_content_markdown.txt'), 'r')
-        self.original_html_post_content = post_content_html_file.read()
-        self.post_content_markdown = post_content_markdown_file.read()
-
-    def test_convert_html_tomarkdown(self):
-        html_converted_from_markdown = markdown2.markdown(self.post_content_markdown)
-        # print('the converted html ', html_converted_from_markdown)
-        # print('the original html ', self.original_html_post_content)
 
 
 class CreatePostTest(TestCase):
@@ -93,3 +78,70 @@ class CreatePostTest(TestCase):
     def test_create_post_has_right_number_of_tags(self):
         tags_count = self.get_created_post_tags_count()
         self.assertEqual(tags_count, self.number_of_dummy_tags)
+
+
+class EditPostContent(TestCase):
+    url = None
+    post = None
+    client = None
+    response = None
+    request_body = None
+    new_markdown_content = None
+
+    def read_new_markdown_content(self):
+        THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
+        post_content_markdown_file = open(os.path.join(THIS_FOLDER, 'post_updated_markdown_content.txt'), 'r')
+        return post_content_markdown_file.read()
+
+    def create_post(self):
+        return create_dummy_instance(Post, False)
+
+    def create_request_body(self):
+        return create_request_body({
+            'markdown_content': self.new_markdown_content,
+        })
+
+    def initialize_edit_content_setup(self):
+        self.read_new_markdown_content()
+        self.create_post()
+        self.create_request_body()
+
+    def setup_url(self):
+        url = reverse_url("post-detail", {'pk': self.post.id})
+        url += 'action=save'
+        return url
+
+    def submit_edit_post_content_url(self):
+        return self.client.put(self.url, self.request_body, content_type="application/json")
+
+    @classmethod
+    def setUpClass(cls):
+        super(EditPostContent, cls).setUpClass()
+        edit_post_content = cls()
+        cls.client = authorization_setup()
+        cls.new_markdown_content = cls.read_new_markdown_content(edit_post_content)
+        cls.post = cls.create_post(edit_post_content)
+        cls.request_body = cls.create_request_body(edit_post_content)
+        cls.url = cls.setup_url(edit_post_content)
+        cls.response = cls.submit_edit_post_content_url(edit_post_content)
+
+    def test_edit_post_content_status(self):
+        self.assertEqual(self.response.status_code, 200)
+
+    def get_post_markdown_content(self):
+        return Post.objects.filter(id=self.post.pk).first().markdown_content
+
+    def test_post_has_the_edited_markdown_content(self):
+        updated_markdown_content = self.get_post_markdown_content()
+        self.assertEqual(updated_markdown_content, self.new_markdown_content)
+
+    def get_post_html_content(self):
+        return Post.objects.filter(id=self.post.pk).first().parsed_html_content
+
+    def get_new_html_content(self):
+        return markdown2.markdown(self.new_markdown_content)
+
+    def test_post_has_the_edited_html_content(self):
+        updated_html_content = self.get_post_html_content()
+        new_html_content = self.get_new_html_content()
+        self.assertEqual(updated_html_content, new_html_content)
