@@ -98,7 +98,9 @@ class EditPostContent(TestCase):
 
     def create_request_body(self):
         return create_request_body({
+            'title': self.post.title,
             'markdown_content': self.new_markdown_content,
+            'created_date': '2008-10-25',
         })
 
     def initialize_edit_content_setup(self):
@@ -108,7 +110,7 @@ class EditPostContent(TestCase):
 
     def setup_url(self):
         url = reverse_url("post-detail", {'pk': self.post.id})
-        url += 'action=save'
+        url += '?action=save'
         return url
 
     def submit_edit_post_content_url(self):
@@ -128,12 +130,12 @@ class EditPostContent(TestCase):
     def test_edit_post_content_status(self):
         self.assertEqual(self.response.status_code, 200)
 
-    def get_post_markdown_content(self):
-        return Post.objects.filter(id=self.post.pk).first().markdown_content
-
-    def test_post_has_the_edited_markdown_content(self):
-        updated_markdown_content = self.get_post_markdown_content()
-        self.assertEqual(updated_markdown_content, self.new_markdown_content)
+    # def get_post_markdown_content(self):
+    #     return Post.objects.filter(id=self.post.pk).first().markdown_content
+    #
+    # def test_post_has_the_edited_markdown_content(self):
+    #     updated_markdown_content = self.get_post_markdown_content()
+    #     self.assertEqual(updated_markdown_content, self.new_markdown_content)
 
     def get_post_html_content(self):
         return Post.objects.filter(id=self.post.pk).first().parsed_html_content
@@ -145,3 +147,50 @@ class EditPostContent(TestCase):
         updated_html_content = self.get_post_html_content()
         new_html_content = self.get_new_html_content()
         self.assertEqual(updated_html_content, new_html_content)
+
+
+class EditPostTags(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super(EditPostTags, cls).setUpClass()
+        edit_post_tags = cls()
+        cls.client = authorization_setup()
+        cls.post = cls.create_post(edit_post_tags)
+        cls.post = cls.associate_post_with_tags(edit_post_tags)
+        cls.url = cls.setup_url(edit_post_tags)
+        cls.request_body_content = cls.create_request_body(edit_post_tags)
+        cls.response = cls.submit_url(edit_post_tags)
+
+    def create_post(self):
+        return create_dummy_instance(Post, False)
+
+    def associate_post_with_tags(self):
+        tags = create_dummy_instances(Tag, 3, False)
+        self.post.tags.add(*tags)
+        return self.post
+
+    def setup_url(self):
+        return reverse_url("update_post_tags", {})
+
+    def create_request_body(self):
+        return create_request_body({
+            'id': self.post.id,
+            'tag_ids': self.get_new_tags_ids()
+        })
+
+    def get_new_tags_ids(self):
+        new_tags = create_dummy_instances(Tag, 3, False)
+        return [tag.id for tag in new_tags]
+
+    def submit_url(self):
+        return self.client.put(self.url, self.request_body_content, content_type="application/json")
+
+    def test_edit_post_tags_status(self):
+        self.assertEqual(self.response.status_code, 200)
+
+    def test_post_has_right_number_of_tags(self):
+        tags_count = self.get_post_tags_count()
+        self.assertEqual(tags_count, 6)
+
+    def get_post_tags_count(self):
+        return Post.objects.filter(id=self.post.id).first().tags.count()

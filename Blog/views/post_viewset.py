@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, generics
 from rest_framework.response import Response
 
 from Blog.models import Post
@@ -52,3 +52,29 @@ class PostViewSet(viewsets.ModelViewSet):
         self.create_post_instance()
         self.associate_post_with_tags()
         return Response(status=status.HTTP_200_OK)
+
+
+class PostUpdateTagsViewSet(generics.UpdateAPIView):
+    queryset = Post.objects.all()
+    request_body = None
+    post = None
+
+    def get_queryset(self):
+        return Post.objects.only('title', 'markdown_content')
+
+    def update(self, request, *args, **kwargs):
+        self.request_body = self.get_request_body()
+        self.post = self.get_post_by_id()
+        self.post = self.update_post_with_new_tags()
+        return Response(status=status.HTTP_200_OK)
+
+    def get_request_body(self):
+        return self.request.data
+
+    def get_post_by_id(self):
+        return Post.objects.filter(id=self.request_body['id']).first()
+
+    def update_post_with_new_tags(self):
+        tag_ids = self.request_body['tag_ids']
+        self.post.tags.add(*tag_ids)
+        return self.post
