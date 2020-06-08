@@ -1,1 +1,1 @@
-from .post_serializer import PostSaveSerializer
+from .post_serializer import PostSaveSerializer , PostWithTagsSerializer

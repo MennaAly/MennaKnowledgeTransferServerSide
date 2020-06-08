@@ -1,8 +1,8 @@
-from rest_framework import viewsets, status, generics
+from rest_framework import viewsets, status, generics, filters
 from rest_framework.response import Response
 
 from Blog.models import Post
-from Blog.serializers import PostSaveSerializer
+from Blog.serializers import PostSaveSerializer, PostWithTagsSerializer
 from MasterData.models import Tag
 
 
@@ -11,16 +11,24 @@ class PostViewSet(viewsets.ModelViewSet):
     post_instance = None
     request_data = None
     post_serializer = None
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['created_date']
 
     def get_queryset(self):
         action = self.request.query_params.get('action')
         if action == 'save':
             return Post.objects.only('title', 'markdown_content')
+        elif action == 'retrieve':
+            return Post.objects.prefetch_related('tags').only('title', 'markdown_content', 'tags', 'created_date')
+        else:
+            return Post.objects.all()
 
     def get_serializer_class(self):
         action = self.request.query_params.get('action')
         if action == 'save':
             return PostSaveSerializer
+        elif action == 'retrieve':
+            return PostWithTagsSerializer
 
     def get_request_data(self):
         self.request_data = self.request.data

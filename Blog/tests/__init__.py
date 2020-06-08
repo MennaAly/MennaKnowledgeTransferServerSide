@@ -1,1 +1,1 @@
-from .post_tests import CreatePostTest, EditPostContent, EditPostTags
+from .post_tests import CreatePostTest, EditPostContentTest, EditPostTagsTest , RetrievePostsDescendinglyByDateTest

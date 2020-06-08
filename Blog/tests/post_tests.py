@@ -1,6 +1,11 @@
-from django.test import TestCase
+import json
+from datetime import datetime
+
+from django.test import TestCase, Client
+from model_mommy import mommy
 
 from Blog.models import Post
+from Blog.serializers import PostWithTagsSerializer
 from MasterData.models import Tag
 from helper import authorization_setup, create_dummy_instances, reverse_url, create_request_body, get_response_content, \
     create_dummy_instance
@@ -80,7 +85,7 @@ class CreatePostTest(TestCase):
         self.assertEqual(tags_count, self.number_of_dummy_tags)
 
 
-class EditPostContent(TestCase):
+class EditPostContentTest(TestCase):
     url = None
     post = None
     client = None
@@ -118,7 +123,7 @@ class EditPostContent(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super(EditPostContent, cls).setUpClass()
+        super(EditPostContentTest, cls).setUpClass()
         edit_post_content = cls()
         cls.client = authorization_setup()
         cls.new_markdown_content = cls.read_new_markdown_content(edit_post_content)
@@ -149,10 +154,10 @@ class EditPostContent(TestCase):
         self.assertEqual(updated_html_content, new_html_content)
 
 
-class EditPostTags(TestCase):
+class EditPostTagsTest(TestCase):
     @classmethod
     def setUpClass(cls):
-        super(EditPostTags, cls).setUpClass()
+        super(EditPostTagsTest, cls).setUpClass()
         edit_post_tags = cls()
         cls.client = authorization_setup()
         cls.post = cls.create_post(edit_post_tags)
@@ -194,3 +199,66 @@ class EditPostTags(TestCase):
 
     def get_post_tags_count(self):
         return Post.objects.filter(id=self.post.id).first().tags.count()
+
+
+class RetrievePostsDescendinglyByDateTest(TestCase):
+    url = None
+    tags = None
+    posts = []
+    client = None
+    response = None
+    post_2019 = None
+    post_2020 = None
+    post_2021 = None
+
+    @classmethod
+    def setUpClass(cls):
+        super(RetrievePostsDescendinglyByDateTest, cls).setUpClass()
+        cls.client = Client()
+        retrieve_posts = cls()
+        cls.post_2019, cls.post_2020, cls.post_2021 = cls.create_posts(retrieve_posts)
+        cls.tags = cls.create_tags(retrieve_posts)
+        cls.post_2019, cls.post_2020, cls.post_2021 = cls.associate_posts_with_tags(retrieve_posts)
+        cls.posts = cls.save_posts_in_list_in_desc_order(retrieve_posts)
+        cls.url = cls.setup_url(retrieve_posts)
+        cls.response = cls.submit_url(retrieve_posts)
+
+    def create_posts(self):
+        post_2019 = mommy.make(Post, created_date=datetime(2019, 6, 1).date(), make_m2m=True)
+        post_2020 = mommy.make(Post, created_date=datetime(2020, 6, 1).date(), make_m2m=True)
+        post_2021 = mommy.make(Post, created_date=datetime(2021, 6, 1).date(), make_m2m=True)
+        return post_2019, post_2020, post_2021
+
+    def create_tags(self):
+        return create_dummy_instances(Tag, 3, False)
+
+    def associate_posts_with_tags(self):
+        self.post_2019.tags.add(*self.tags)
+        self.post_2020.tags.add(*self.tags)
+        self.post_2021.tags.add(*self.tags)
+        return self.post_2019, self.post_2020, self.post_2021
+
+    def save_posts_in_list_in_desc_order(self):
+        return [self.post_2021, self.post_2020, self.post_2019]
+
+    def setup_url(self):
+        url = reverse_url("post-list", {})
+        url += "?action=retrieve&ordering=-created_date"
+        return url
+
+    def submit_url(self):
+        return self.client.get(self.url)
+
+    def test_retrieve_posts_status(self):
+        self.assertEqual(self.response.status_code, 200)
+
+    def test_response_data_in_desc_order(self):
+        response_content = self.get_response_content()
+        serialized_posts = self.serialize_post_list()
+        self.assertEqual(response_content, serialized_posts)
+
+    def get_response_content(self):
+        return json.loads(self.response.content)
+
+    def serialize_post_list(self):
+        return PostWithTagsSerializer(self.posts, many=True).data
