@@ -262,3 +262,62 @@ class RetrievePostsDescendinglyByDateTest(TestCase):
 
     def serialize_post_list(self):
         return PostWithTagsSerializer(self.posts, many=True).data
+
+
+class FilterPostsByTags(TestCase):
+    url = None
+    tags = []
+    posts = []
+    client = None
+    response = None
+
+    def create_posts(self):
+        return mommy.make(Post, 3)
+
+    def create_tags(self):
+        software_engineer_tag = mommy.make(Tag, name='swe')
+        backend_tag = mommy.make(Tag, name='BE')
+        return [software_engineer_tag, backend_tag]
+
+    def associate_posts_to_tags(self):
+        self.add_tag_to_post(self.posts[0], self.tags[0])
+        self.add_tag_to_post(self.posts[1], self.tags[0])
+        self.add_tag_to_post(self.posts[0], self.tags[1])
+        self.add_tag_to_post(self.posts[2], self.tags[1])
+        return self.posts
+
+    def add_tag_to_post(self, post, tag):
+        post.tags.add(tag)
+
+    def setup_url(self):
+        url = reverse_url("post-list", {})
+        url += "?action=retrieve&tags__name=" + self.tags[0].name
+        return url
+
+    def submit_url(self):
+        return self.client.get(self.url)
+
+    def get_response_content(self):
+        return json.loads(self.response.content)
+
+    @classmethod
+    def setUpClass(cls):
+        super(FilterPostsByTags, cls).setUpClass()
+        filter_posts_by_tags = cls()
+        cls.client = Client()
+        cls.posts = cls.create_posts(filter_posts_by_tags)
+        cls.tags = cls.create_tags(filter_posts_by_tags)
+        cls.posts = cls.associate_posts_to_tags(filter_posts_by_tags)
+        cls.url = cls.setup_url(filter_posts_by_tags)
+        cls.response = cls.submit_url(filter_posts_by_tags)
+        cls.response_content = cls.get_response_content(filter_posts_by_tags)
+
+    def test_filter_tags_status_code(self):
+        self.assertEqual(self.response.status_code, 200)
+
+    def test_response_has_right_count_of_tags(self):
+        self.assertEqual(len(self.response_content), 2)
+
+    def test_response_returned_right_tags(self):
+        self.assertEqual(self.response_content[0]['title'], self.posts[0].title)
+        self.assertEqual(self.response_content[1]['title'], self.posts[1].title)

@@ -1,3 +1,5 @@
+from django_filters import FilterSet
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status, generics, filters
 from rest_framework.response import Response
 
@@ -6,13 +8,20 @@ from Blog.serializers import PostSaveSerializer, PostWithTagsSerializer
 from MasterData.models import Tag
 
 
+class PostFilterClass(FilterSet):
+    class Meta:
+        model = Post
+        fields = {'tags__name': ('exact',), }
+
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     post_instance = None
     request_data = None
     post_serializer = None
-    filter_backends = [filters.OrderingFilter]
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = ['created_date']
+    filter_class = PostFilterClass
 
     def get_queryset(self):
         action = self.request.query_params.get('action')

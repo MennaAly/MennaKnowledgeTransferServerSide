@@ -11,15 +11,6 @@ from django_filters import FilterSet, CharFilter, NumberFilter
 
 
 class ProjectFilterClass(FilterSet):
-    # implementation_tools = NumberFilter(
-    #     name='implementation_tools__id',
-    #     lookup_type='exact',
-    # )
-    # categories = NumberFilter(
-    #     name='categories__id',
-    #     lookup_type='exact',
-    # )
-
     class Meta:
         model = Project
         fields = {'implementation_tools__id': ('exact',), 'categories__id': ('exact',), }
